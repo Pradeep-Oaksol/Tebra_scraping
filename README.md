@@ -48,7 +48,7 @@ CREATE TABLE providers (
     company_name VARCHAR(255),
     num_locations INT,
     location_addresses TEXT,
-    phone_number VARCHAR(50),
+    phone_number TEXT,
     website_link VARCHAR(500)
 );
 ```

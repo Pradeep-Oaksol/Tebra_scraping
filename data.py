@@ -22,16 +22,20 @@ try:
     """
 
     for provider in providers_data:
+        phone_data = json.dumps(provider["Phone Number"]) if isinstance(provider["Phone Number"], list) else provider["Phone Number"]
+        location_data = json.dumps(provider["Location Addresses"]) if isinstance(provider["Location Addresses"], list) else provider["Location Addresses"]
+
         cursor.execute(insert_query, (
             provider["Provider Name"],
             provider["Company Name"],
             provider["Number of Locations"],
-            json.dumps(provider["Location Addresses"]),
-            provider["Phone Number"],
+            location_data,
+            phone_data,
             provider["Website Link"]
         ))
 
-    conn.commit()
+        conn.commit()  # Explicitly commit after each insertion
+
     print(f"{cursor.rowcount} records inserted successfully!")
 
 except mysql.connector.Error as err:

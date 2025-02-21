@@ -11,6 +11,14 @@ db_config = {
 with open("providers_data.json", "r", encoding="utf-8") as file:
     providers_data = json.load(file)
 
+# If JSON is a dictionary, extract providers from all departments
+if isinstance(providers_data, dict):
+    all_providers = []
+    for dept, providers in providers_data.items():
+        if isinstance(providers, list):  # Ensure it's a list of providers
+            all_providers.extend(providers)
+    providers_data = all_providers  # Replace with flattened list
+
 try:
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
@@ -22,20 +30,28 @@ try:
     """
 
     for provider in providers_data:
-        phone_data = json.dumps(provider["Phone Number"]) if isinstance(provider["Phone Number"], list) else provider["Phone Number"]
-        location_data = json.dumps(provider["Location Addresses"]) if isinstance(provider["Location Addresses"], list) else provider["Location Addresses"]
+        if not isinstance(provider, dict):  
+            print(f"❌ Skipping invalid provider entry: {provider}")
+            continue  
+
+        phone_data = provider.get("Phone Number", "N/A")
+        if isinstance(phone_data, list):  
+            phone_data = json.dumps(phone_data)
+        elif isinstance(phone_data, str):
+            phone_data = json.dumps([phone_data])
+        else:
+            phone_data = json.dumps(["N/A"])
 
         cursor.execute(insert_query, (
-            provider["Provider Name"],
-            provider["Company Name"],
-            provider["Number of Locations"],
-            location_data,
+            provider.get("Provider Name", "N/A"),
+            provider.get("Company Name", "N/A"),
+            provider.get("Number of Locations", 0),
+            json.dumps(provider.get("Location Addresses", ["N/A"])),
             phone_data,
-            provider["Website Link"]
+            provider.get("Website Link", "N/A")
         ))
 
-        conn.commit()  # Explicitly commit after each insertion
-
+    conn.commit()
     print(f"{cursor.rowcount} records inserted successfully!")
 
 except mysql.connector.Error as err:
